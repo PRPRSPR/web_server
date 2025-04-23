@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<style>
+    
+</style>
+<body>
+    <div id="app">
+        <table>
+            <tr>
+                <td>아 이 디</td>
+                <td> : <input placeholder="아이디 입력" v-model="userId"></td>
+            </tr>
+            <tr>
+                <td>비밀번호</td>
+                <td> : <input type="password" placeholder="비밀번호 입력" v-model="pwd" @keyup.enter="fnLogin"></td>
+            </tr>
+        </table>
+        <button @click="fnLogin">로그인</button>
+    </div>
+</body>
+</html>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                userId:"",
+                pwd:""
+            };
+        },
+        methods: {
+            fnLogin : function(){
+                let self = this;
+                fetch("http://localhost:3000/user", {
+                        method : "POST",
+                        headers : {
+                            "Content-type" : "application/json"
+                        },
+                        credentials : "include",
+                        body : JSON.stringify({
+                            userId : self.userId,
+                            pwd : self.pwd
+                        })
+                    })
+                        .then( res => res.json())
+                        .then( data => {
+                            console.log(data);
+                            alert(data.message);
+                            if(data.user){
+                                location.href = "product-list.html";
+                            }
+                        })
+                        .catch( err => {
+                            console.log("서버 에러");
+                        })
+            }       
+        },
+        mounted() {
+            let self = this;
+        }
+    });
+    app.mount('#app');
+</script>

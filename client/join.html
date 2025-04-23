@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<style>
+    
+</style>
+<body>
+    <div id="app">
+        <table>
+            <tr>
+                <td>　아 이 디</td>
+                <td> : <input v-model="user.userId"></td>
+            </tr>
+            <tr>
+                <td>비 밀 번 호</td>
+                <td> : <input type="password" v-model="user.pwd"></td>
+            </tr>
+            <tr>
+                <td>　이　름</td>
+                <td> : <input v-model="user.name"></td>
+            </tr>
+            <tr>
+                <td>　주　소</td>
+                <td> : <input v-model="user.addr"></td>
+            </tr>
+            <tr>
+                <td>휴대폰번호</td>
+                <td> : <input v-model="user.phone"></td>
+            </tr>
+        </table>
+        <button @click="fnJoin">회원가입</button>
+    </div>
+</body>
+</html>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                user : {
+                    userId:"",
+                    pwd:"",
+                    name:"",
+                    addr:"",
+                    phone:""
+                }
+            };
+        },
+        methods: {
+            fnJoin : function(){
+                let self = this;
+                fetch("http://localhost:3000/user/join", {
+                        method : "POST",
+                        headers : {
+                            "Content-type" : "application/json"
+                        },
+                        body : JSON.stringify(self.user)
+                    })
+                        .then( res => res.json())
+                        .then( data => {
+                            console.log(data);
+                            alert(data.message);
+                            // location.href = "product-list.html";
+                        })
+                        .catch( err => {
+                            console.log("서버 에러");
+                        })
+            }       
+        },
+        mounted() {
+            let self = this;
+        }
+    });
+    app.mount('#app');
+</script>

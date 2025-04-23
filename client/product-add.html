@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<style>
+    table, tr, td, th{
+        border : 1px solid black;
+        border-collapse: collapse;
+        padding : 5px 10px;
+        text-align: center;
+    }
+</style>
+<body>
+    <div id="app">
+        <div>제품명 : <input placeholder="제품명" v-model="info.productName"></div>
+        <div>제품설명 : <input placeholder="제품설명" v-model="info.description"></div>
+        <div>가격 : <input placeholder="가격" v-model="info.price"></div>
+        <div>재고 : <input placeholder="재고" v-model="info.stock"></div>
+        <div>종류 : <input placeholder="종류" v-model="info.category"></div>
+        <div>제품 사진 : <input type="file" @change="onFileChange"></div>
+        <div>
+            <button @click="fnAdd">{{productId ? "수정" : "등록"}}</button>
+            <a href="product-list.html"><button>돌아가기</button></a>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                info :{
+                    productName:"",
+                    description:"",
+                    price:"",
+                    stock:"",
+                    category:""
+                },
+                productId: "",
+                imageFile: null
+            };
+        },
+        methods: {
+            fnAdd : function(){
+                let self = this;
+                
+                const formData = new FormData();
+                formData.append('productImage', self.imageFile); 
+                formData.append('productInfo', JSON.stringify(self.info)); 
+
+                const method = self.productId ? "PUT" : "POST";
+                const url = self.productId
+                    ? "http://localhost:3000/product/" + self.productId
+                    : "http://localhost:3000/product";
+
+                fetch(url, {
+                    method: method,
+                    body: formData, 
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(self.productId ? "수정 완료!" : "등록 완료!");
+                        location.href = "product-list.html";
+                    })
+                    .catch( err => {
+                        console.log("서버 에러");
+                    })
+            },
+            fnGetInfo(){
+                let self = this;
+                fetch("http://localhost:3000/product/"+self.productId)
+                    .then((res)=> res.json())
+                    .then( data => {
+                        console.log(data.info);
+                        self.info = data.info;
+                    })
+            },
+            onFileChange(event) {
+                this.imageFile = event.target.files[0];
+            },
+        },
+        mounted() {
+            let self = this;
+            const queryParams = new URLSearchParams(window.location.search);
+            self.productId = queryParams.get('productId') || '';
+            if(self.productId){
+                self.fnGetInfo();
+            }
+        }
+    });
+    app.mount('#app');
+</script>
