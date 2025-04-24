@@ -88,11 +88,12 @@ router.post('/join', async (req, res)=>{
     let {userId, pwd, name, addr, phone} = req.body;
     try{
         let hashPwd = await bcrypt.hash(pwd, 10);
-        let [user] = await db.query("insert into tbl_user values(?,?,?,?,?,now(),now(),'C'", [userId, hashPwd, name, addr, phone]);
-        
-        res.json({
-            message:"회원가입 완료",
-        });
+        console.log(hashPwd);
+
+        let query = "insert into tbl_user values (?,?,?,?,?,now(),now(),'C') " 
+        console.log(query);
+        let [user] = await db.query(query, [userId, hashPwd, name, addr, phone]);
+    
     } catch(err){
         console.log("에러 발생");
         res.status(500).send("Server Error");

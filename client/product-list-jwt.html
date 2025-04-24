@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<style>
+    #app {
+        width: 800px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 10px 12px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+
+    th {
+        background-color: #f8f9fa;
+        color: #333;
+        font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    tr:hover {
+        background-color: #e9f7ff;
+    }
+
+    a {
+        color: #0984e3;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    button {
+        padding: 6px 10px;
+        font-size: 13px;
+        background-color: #0984e3;
+        border: none;
+        border-radius: 3px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    button:hover {
+        background-color: #0652dd;
+    }
+
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+    .pages {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        margin: 20px;
+        flex-wrap: wrap;
+    }
+
+    .pages button {
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        color: #333;
+        padding: 8px 12px;
+        font-size: 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .pages button:hover:not(:disabled) {
+        background-color: #dfe6e9;
+        border-color: #aaa;
+    }
+
+    .pages button:disabled {
+        background-color: #eaeaea;
+        color: #999;
+        cursor: not-allowed;
+        border-color: #ddd;
+    }
+
+    .pages button.active {
+        background-color: #0984e3;
+        color: white;
+        font-weight: bold;
+        border-color: #0984e3;
+    }
+
+    .pages button:first-child,
+    .pages button:last-child {
+        font-weight: bold;
+    }
+    .page-size-select {
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+    .page-size-select button{
+        float: right;
+    }
+
+    .page-size-select select {
+        padding: 4px 8px;
+        font-size: 14px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+</style>
+<body>
+    <div id="app">
+        <div class="page-size-select">
+            <select v-model="pageSize" @change="fnChangePageSize" id="pageSize">
+                <option value="5">5개</option>
+                <option value="10">10개</option>
+                <option value="15">15개</option>
+            </select>
+            <button @click="fnLogout">로그아웃</button>
+        </div>
+        <table>
+            <tr>
+                <th>번호</th>
+                <th>제품명</th>
+                <th>가격</th>
+                <th>종류</th>
+                <th>재고</th>
+                <th v-if="user.userStatus == 'A'">수정</th>
+                <th v-if="user.userStatus == 'A'">삭제</th>
+            </tr>
+            <tr v-for="item in list">
+                <td>{{item.productId}}</td>
+                <td>
+                    <a href="javascript:;" @click="fnGetInfo(item.productId)">{{item.productName}}</a>
+                </td>
+                <td>{{Number(item.price).toLocaleString()}}</td>
+                <td>{{item.category}}</td>
+                <td>{{item.stock}}</td>
+                <td v-if="user.userStatus == 'A'"><button @click="fnEdit(item.productId)">수정</button></td>
+                <td v-if="user.userStatus == 'A'"><button @click="fnRemove(item.productId)">삭제</button></td>
+            </tr>
+        </table>
+        <div class="pages">
+            <button @click="fnPageMove('prev')" :disabled="page === 1">이전</button>
+            <button @click="fnBlockMove('prev')" :disabled="pageBlocks[0] === 1">«</button>
+      
+            <!-- <button v-for="num in pageBlocks" :key="num" @click="fnPage(num)" :class="{ active: num === page }"> -->
+            <button v-for="num in pageBlocks" :key="num" @click="page=num; fnGetList()" :class="{ active: num === page }">
+              {{ num }}
+            </button>
+      
+            <button @click="fnBlockMove('next')" :disabled="pageBlocks[pageBlocks.length - 1] === index">»</button>
+            <button @click="fnPageMove('next')" :disabled="page === index">다음</button>
+        </div>
+        <a href="product-add.html"><button>제품등록</button></a>
+    </div>
+</body>
+</html>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                list : [],
+                page: 1,
+                pageSize: 5,
+                index: 1,
+                blockSize: 5,
+                user : {}
+            };
+        },
+        computed: {
+            pageBlocks() {
+                const start = Math.floor((this.page - 1) / this.blockSize) * this.blockSize + 1;
+                const end = Math.min(start + this.blockSize - 1, this.index);
+                let pages = [];
+                for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                }
+                return pages;
+            },
+        },
+        methods: {
+            fnGetList : function(){
+                let self = this;
+                fetch("http://localhost:3000/product?page=" + self.page + "&limit=" + self.pageSize)
+                    .then((res)=> res.json())
+                    .then( data => {
+                        console.log(data);
+                        self.list = data.list;
+                        self.index = data.totalPages;
+                    })
+            },
+            fnGetInfo(productId){
+                location.href = "product-view.html?productId="+productId;
+            },
+            fnEdit(productId){
+                location.href = "product-add.html?productId="+productId;
+            },
+            fnRemove(productId){
+                let self = this;
+                if(!confirm("정말 삭제하시겠습니까?")){
+                    return;
+                }
+                fetch("http://localhost:3000/product/"+productId, {
+                    method : "DELETE",
+                    headers : {
+                        "Authorization": "Bearer " + localStorage.getItem("token")
+                    }
+                })
+                    .then((res)=> res.json())
+                    .then( data => {
+                        console.log(data);
+                        alert("삭제되었습니다.");
+                        // data.message
+                        self.fnGetList();
+                    })
+            },
+            // fnPage(num) {
+            //     this.page = num;
+            //     this.fnGetList();
+            // },
+            fnPageMove(direction) {
+                if (direction === "next" && this.page < this.index) this.page++;
+                else if (direction === "prev" && this.page > 1) this.page--;
+                this.fnGetList();
+            },
+            fnBlockMove(direction) {
+                const currentBlock = Math.floor((this.page - 1) / this.blockSize);
+                if (direction === "prev" && currentBlock > 0) {
+                    this.page = (currentBlock - 1) * this.blockSize + 1;
+                } else if (direction === "next" && (currentBlock + 1) * this.blockSize < this.index) {
+                    this.page = (currentBlock + 1) * this.blockSize + 1;
+                }
+                this.fnGetList();
+            },
+            fnChangePageSize() {
+                this.page = 1;
+                this.fnGetList();
+            },
+        },
+        mounted() {
+            let self = this;
+
+            let token = localStorage.getItem('token');
+            if(token){
+                const base64Payload = token.split('.')[1];
+                const payload = atob(base64Payload);
+                let user = JSON.parse(payload);
+                console.log(user);
+                self.user = user;
+                self.fnGetList();
+            } else {
+                alert("로그인 필요");
+                location.href = "login.html";
+            }
+
+        }
+    });
+    app.mount('#app');
+</script>

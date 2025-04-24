@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<style>
+    table, tr, td, th{
+        padding : 5px 10px;
+        max-width: 900px;
+    }
+    table{
+        width: 900px;
+    }
+    table button {
+        margin-right: 10px;
+    }
+    td input{
+        width: 600px;
+    }
+</style>
+<body>
+    <div id="app">
+        <table>
+            <tr>
+                <th>제목</th>
+                <td colspan="5"><input v-model="info.title" placeholder="제목 입력"></td>
+            </tr>
+            <tr>
+                <td colspan="6"><hr></td>
+            </tr>
+            <tr>
+                <th>내용</th>
+                <td colspan="5"><textarea v-model="info.contents" placeholder="내용 입력" rows="10" cols="85"></textarea></td>
+            </tr>
+            <tr>
+                <td colspan="6"><hr></td>
+            </tr>
+            <tr>
+                <td colspan="6">
+                    <button @click="fnAdd">저장</button>
+                    <a href="board-list.html"><button>돌아가기</button></a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                info :{
+                    title:"",
+                    contents:"",
+                },
+                boardNo: "",
+            };
+        },
+        methods: {
+            fnAdd : function(){
+                let self = this;
+                
+                const method = self.boardNo ? "PUT" : "POST";
+                const url = self.boardNo
+                    ? "http://localhost:3000/board/" + self.boardNo
+                    : "http://localhost:3000/board";
+
+                fetch(url, {
+                    method: method,
+                    headers : {
+                        "Content-type" : "application/json"
+                    },
+                    body : JSON.stringify(self.info)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert("저장 완료!");
+                        location.href = "board-list.html";
+                    })
+                    .catch( err => {
+                        console.log("서버 에러");
+                    })
+            },
+            fnGetInfo(){
+                let self = this;
+                fetch("http://localhost:3000/board/"+self.boardNo)
+                    .then((res)=> res.json())
+                    .then( data => {
+                        self.info.title = data.info.title;
+                        self.info.contents = data.info.contents;
+                        console.log(self.info);
+                    })
+            },
+        },
+        mounted() {
+            let self = this;
+            const queryParams = new URLSearchParams(window.location.search);
+            if(queryParams.get('boardNo')){
+                self.boardNo = queryParams.get('boardNo');
+                self.fnGetInfo();
+            }
+        }
+    });
+    app.mount('#app');
+</script>

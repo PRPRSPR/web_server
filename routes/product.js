@@ -1,8 +1,9 @@
 const express = require('express')
 const db = require('../db')
-const router = express.Router();
+const authMiddleware  = require('../auth')
 const multer  = require('multer')
 const path = require('path');
+const router = express.Router();
 
 router.use('../uploads', express.static('uploads'));
 
@@ -88,7 +89,8 @@ router.post('/', upload.single('productImage'), async (req, res)=>{
     }
 })
 
-router.delete('/:productId', async (req, res)=>{
+router.delete('/:productId', authMiddleware, async (req, res)=>{
+    // 삭제 실행 전 토큰으로 유저 확인 먼저 함(authMiddleware)
     let {productId} = req.params;
     try{
         let result = await db.query("delete from tbl_product where productId = "+productId);

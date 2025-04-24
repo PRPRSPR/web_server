@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<style>
+    table, tr, td, th{
+        padding : 10px 10px;
+    }
+    table{
+        width: 900px;
+    }
+    table button {
+        margin-right: 10px;
+    }
+</style>
+<body>
+    <div id="app">
+        <table>
+            <tr>
+                <th>제목</th>
+                <td colspan="3">{{info.title}}</td>
+                <th>작성자</th>
+                <td>{{info.userName}}</td>
+            </tr>
+            <tr>
+                <td colspan="6"><hr></td>
+            </tr>
+            <tr>
+                <td colspan="6">{{info.contents}}</td>
+            </tr>
+            <tr>
+                <td colspan="6"><hr></td>
+            </tr>
+            <tr>
+                <td colspan="6">
+                    <button @click="fnEdit">수정</button> 
+                    <button @click="fnRemove">삭제</button> 
+                    <button @click="fnBack">돌아가기</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                info : {},
+                boardNo : ""
+            };
+        },
+        methods: {
+            fnGetInfo(){
+                let self = this;
+                fetch("http://localhost:3000/board/"+self.boardNo)
+                    .then((res)=> res.json())
+                    .then( data => {
+                        console.log(data.info);
+                        self.info = data.info;
+                    })
+            },
+            fnEdit(){
+                location.href = "board-edit.html?boardNo="+this.boardNo;
+            },
+            fnRemove(){
+                let self = this;
+                if(!confirm("정말 삭제하시겠습니까?")){
+                    return;
+                }
+                fetch("http://localhost:3000/board/"+self.boardNo, {
+                    method : "DELETE",
+                })
+                    .then((res)=> res.json())
+                    .then( data => {
+                        console.log(data);
+                        if(data.message == "result"){
+                            alert("삭제되었습니다."), location.href = "board-list.html";
+                        }
+                    })
+            },
+            fnBack(){
+                location.href='board-list.html';
+            }
+        },
+        mounted() {
+            let self = this;
+            const queryParams = new URLSearchParams(window.location.search);
+            self.boardNo = queryParams.get('boardNo') || ''; 
+            console.log(self.boardNo);
+            self.fnGetInfo();
+        }
+    });
+    app.mount('#app');
+</script>

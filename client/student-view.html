@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<style>
+    table, tr, td, th{
+        border : 1px solid black;
+        border-collapse: collapse;
+        padding : 10px 10px;
+        text-align: center;
+    }
+</style>
+<body>
+    <div id="app">
+        <table>
+            <tr>
+                <th>학번</th>
+                <td>{{info.stu_no}}</td>
+                <th>이름</th>
+                <td>{{info.stu_name}}</td>
+            </tr>
+            <tr>
+                <th>학과</th>
+                <td>{{info.stu_dept}}</td>
+                <th>학년/반</th>
+                <td>{{info.stu_grade+' - '+info.stu_class}}</td>
+            </tr>
+            <tr>
+                <th>성별</th>
+                <td>{{info.stu_gender}}</td>
+                <th>키/몸무게</th>
+                <td>{{info.stu_height+' / '+info.stu_weight}}</td>
+            </tr>
+        </table>
+        <button @click="fnBack">돌아가기</button>
+    </div>
+</body>
+</html>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                info : {},
+                stuNo : ""
+            };
+        },
+        methods: {
+            fnGetInfo(){
+                let self = this;
+                fetch("http://localhost:3000/student/"+self.stuNo)
+                    .then((res)=> res.json())
+                    .then( data => {
+                        console.log(data.info);
+                        self.info = data.info;
+                    })
+            },
+            fnBack(){
+                location.href='student-list.html';
+            }
+        },
+        mounted() {
+            let self = this;
+            const queryParams = new URLSearchParams(window.location.search);
+            self.stuNo = queryParams.get('stuNo') || ''; 
+            console.log(self.stuNo);
+            self.fnGetInfo();
+        }
+    });
+    app.mount('#app');
+</script>
