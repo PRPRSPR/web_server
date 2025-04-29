@@ -4,6 +4,7 @@ const productRouter = require('./routes/product')
 const userRouter = require('./routes/user')
 const loginRouter = require('./routes/login')
 const studentRouter = require('./routes/student')
+const feedRouter = require('./routes/feed')
 
 const cors = require('cors')
 const session = require('express-session')
@@ -12,7 +13,7 @@ const app = express()
 app.use(express.json());
 app.use(cors({
     // 보안정책 관련
-    origin : "http://localhost:5502",
+    origin : "http://localhost:3000",
     // 허용 url
     credentials : true
     // 쿠키 허용
@@ -33,11 +34,12 @@ app.use("/product", productRouter);
 app.use("/user", userRouter);
 app.use("/login", loginRouter);
 app.use("/student", studentRouter);
+app.use("/feed", feedRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello World')
 })
 
-app.listen(3000, ()=>{
+app.listen(3005, ()=>{
     console.log("서버 실행 중");
 })

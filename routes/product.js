@@ -22,22 +22,12 @@ const upload = multer({ storage: storage });
 // router.get('/product', async (req, res)=>{
 router.get('/', async (req, res)=>{
     try{
-        let page = parseInt(req.query.page) || 1;
-        let limit = parseInt(req.query.limit) || 10;
-        let offset = (page - 1) * limit;
-
-        const [countResult] = await db.query("SELECT COUNT(*) as total FROM tbl_product");
-        const total = countResult[0].total;
-        const totalPages = Math.ceil(total / limit);
-
-        let [list] = await db.query("select * from tbl_product order by productId desc limit ? offset ?",[limit,offset]);
+        
+        let [list] = await db.query("select * from tbl_product order by productId desc ");
         console.log(list);
         res.json({
             message:"result",
             list : list,
-            total: total,
-            totalPages: totalPages,
-            currentPage: page
         });
     } catch(err){
         console.log("에러 발생");
