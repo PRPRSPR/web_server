@@ -10,7 +10,8 @@ const cors = require('cors')
 const session = require('express-session')
 
 const app = express()
-app.use(express.json());
+app.use(express.json({ limit: '30mb' }));
+app.use(express.urlencoded({ limit: '30mb', extended: true }));
 app.use(cors({
     // 보안정책 관련
     origin : "http://localhost:3000",
