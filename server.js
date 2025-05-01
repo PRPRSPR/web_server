@@ -5,16 +5,19 @@ const userRouter = require('./routes/user')
 const loginRouter = require('./routes/login')
 const studentRouter = require('./routes/student')
 const feedRouter = require('./routes/feed')
+const memberRouter = require('./routes/sns/member')
 
+const path = require('path')
 const cors = require('cors')
 const session = require('express-session')
 
 const app = express()
 app.use(express.json({ limit: '30mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.urlencoded({ limit: '30mb', extended: true }));
 app.use(cors({
     // 보안정책 관련
-    origin : "http://localhost:3000",
+    origin : ["http://localhost:3000","http://localhost:3001"],
     // 허용 url
     credentials : true
     // 쿠키 허용
@@ -36,6 +39,7 @@ app.use("/user", userRouter);
 app.use("/login", loginRouter);
 app.use("/student", studentRouter);
 app.use("/feed", feedRouter);
+app.use("/member", memberRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello World')
