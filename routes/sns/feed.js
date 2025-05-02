@@ -1,6 +1,8 @@
+// sns sample >> tbl_feed 
+
 const express = require('express')
-const db = require('../db')
-const authMiddleware  = require('../auth')
+const db = require('../../db')
+const authMiddleware  = require('../../auth')
 const multer  = require('multer')
 const path = require('path');
 const router = express.Router();
@@ -23,11 +25,11 @@ const upload = multer({
 });
 
 router.get('/', async (req, res)=>{
-    let {userId} = req.query;
+    let {email} = req.query;
     try{
-        let sql = "select f.*, u.userName, i.imgPath from tbl_feed f left join tbl_user u on f.userId=u.userId left join tbl_feed_img i on f.id=i.feedId ";
-        if(userId){
-            sql += " where f.userId = '"+userId+"'";
+        let sql = "select f.*, m.userName, i.imgPath from tbl_feed f left join tbl_member m on f.email = m.email left join tbl_feed_img i on f.id = i.feedId where i.thumbnailYn = 'Y' ";
+        if(email){
+            sql += " and f.email = '"+email+"' ";
         }
         let [list] = await db.query(sql + " order by f.id desc");
         console.log(list);
@@ -36,7 +38,7 @@ router.get('/', async (req, res)=>{
             list : list
         });
     } catch(err){
-        console.log("에러 발생");
+        console.log(err.message);
         res.status(500).send("Server Error");
     }
 })
@@ -44,14 +46,16 @@ router.get('/', async (req, res)=>{
 router.get('/:id', async (req, res)=>{
     let {id} = req.params;
     try{
-        let [info] = await db.query("select f.*, u.userName, i.imgNo, i.imgPath from tbl_feed f left join tbl_user u on f.userId=u.userId left join tbl_feed_img i on f.id=i.feedId where id = "+id);
+        let [info] = await db.query("select f.*, m.userName from tbl_feed f left join tbl_member m on f.email = u.email where id = "+id);
+        let [imgInfo] = await db.query("select * from tbl_feed_img where feedId = "+id);
         console.log(info);
         res.json({
             message:"result",
-            info : info[0]
+            info : info[0],
+            imgList : imgInfo
         });
     } catch(err){
-        console.log("에러 발생");
+        console.log(err.message);
         res.status(500).send("Server Error");
     }
 })
@@ -73,23 +77,23 @@ router.delete('/:id', authMiddleware, async (req, res)=>{
 router.put('/:id', upload.array('feedImages',10), async (req, res)=>{
     let {id} = req.params;
     const feedInfo = JSON.parse(req.body.feedInfo);
-    const {userId, content} = feedInfo;
+    const {title, content, thumbnailYn, imgNo} = feedInfo;
     const files = req.files;
     console.log(files);
     try{
-        let feedQuery = "update tbl_feed set userId = ?, content = ?, cdatetime = now() where id = ?";
-        let feedResult = await db.query(feedQuery, [userId, content, id]);
+        let feedQuery = "update tbl_feed set title = ?, content = ?, udatetime = now() where id = ?";
+        let feedResult = await db.query(feedQuery, [title, content, id]);
         
         for (let file of files) {
             console.log(file.originalname);
             await db.query(
-                "update tbl_feed_img set imgName = ?, imgPath = ? where imgNo = ?", 
-                [file.originalname, `/uploads/${file.filename}`, ]
+                "update tbl_feed_img set imgName = ?, imgPath = ?, thumbnailYn =? where imgNo = ?", 
+                [file.originalname, `/uploads/${file.filename}`, thumbnailYn, imgNo]
             );
         }
 
         res.json({
-            message:"피드 등록 완료",
+            message:"피드 수정 완료",
         });
     } catch(err){
         console.log("에러 발생");
@@ -97,19 +101,19 @@ router.put('/:id', upload.array('feedImages',10), async (req, res)=>{
     }
 })
 
-router.post('/', upload.array('feedImages',10), async (req, res)=>{
+router.post('/', upload.array('feedImage',10), async (req, res)=>{
     const feedInfo = JSON.parse(req.body.feedInfo);
-    const {userId, content} = feedInfo;
+    const {email, title, content} = feedInfo;
     const files = req.files;
     console.log(files);
     try{
-        let feedQuery = "insert into tbl_feed values(null, ?, ?, now())"
-        let feedResult  = await db.query(feedQuery, [userId, content]);
+        let feedQuery = "insert into tbl_feed values(null, ?, ?, ?, now(), now())"
+        let feedResult  = await db.query(feedQuery, [email, title, content]);
         const id = feedResult[0].insertId;
         
         if (files && files.length > 0) {
             const fileQuery = "insert into tbl_feed_img values ?";
-            const values = files.map(file => [null, id, file.originalname, `/uploads/${file.filename}`]);
+            const values = files.map((file,index) => [null, id, file.originalname, `/uploads/${file.filename}`, index === 0 ? 'Y' : 'N']);
             await db.query(fileQuery, [values]);
         }
         
@@ -117,7 +121,7 @@ router.post('/', upload.array('feedImages',10), async (req, res)=>{
             message:"피드 등록 완료",
         });
     } catch(err){
-        console.log("에러 발생");
+        console.log(err.message);
         res.status(500).send("Server Error");
     }
 })

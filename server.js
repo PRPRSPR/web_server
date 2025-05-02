@@ -4,7 +4,8 @@ const productRouter = require('./routes/product')
 const userRouter = require('./routes/user')
 const loginRouter = require('./routes/login')
 const studentRouter = require('./routes/student')
-const feedRouter = require('./routes/feed')
+const feedRouter = require('./routes/sns/feed')
+const feed2Router = require('./routes/feed2')
 const memberRouter = require('./routes/sns/member')
 
 const path = require('path')
@@ -39,6 +40,7 @@ app.use("/user", userRouter);
 app.use("/login", loginRouter);
 app.use("/student", studentRouter);
 app.use("/feed", feedRouter);
+app.use("/feed2", feed2Router);
 app.use("/member", memberRouter);
 
 app.get('/', (req, res) => {
